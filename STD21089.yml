@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Storage stack STD21089
+
+Parameters:
+  DBName:
+    Type: String
+    Default: db21089
+  DBClass:
+    Default: db.t3.micro
+    Description: Database instance class
+    Type: String
+    ConstraintDescription: must select a valid database instance type.
+
+Resources:
+  Database:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Retain
+    Properties:
+      DBName: !Ref DBName
+      AllocatedStorage: "5"
+      DBInstanceClass: !Ref DBClass
+      Engine: postgres
+      MasterUsername: !Sub "{{resolve:ssm:/shared/db/username}}"
+      MasterUserPassword: !Sub "{{resolve:ssm:/shared/db/password}}"
+  DatabaseSSM:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /shared/db/url
+      Type: String
+      Value: !Sub “jdbc:postgresql://”+${Database endpoint address}+”:”+${Database endpoint port}+”/”+${Database name}
+Outputs:
+  DatabaseName:
+    Value: !Ref Database
